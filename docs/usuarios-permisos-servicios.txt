@@ -52,7 +52,7 @@ cat /lib/systemd/system/nginx.service
 ##Verás secciones [Unit], [Service] y [Install] — eso es toda la definición del servicio.
 
 ##Man pages — acostúmbrate a usarlas
-bashman chmod
+man chmod
 man systemctl
 man 5 passwd    # el '5' es para la sección de formatos de archivo
 ##Busca dentro de una man page con /término y navega con n y N.

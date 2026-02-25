@@ -6,7 +6,7 @@ Desde la interfaz web de Proxmox (https://IP-proxmox:8006), sube la ISO de Ubunt
 
 # Acceso SSH desde Arch a la VM
 Una vez instalada la VM, apunta su IP con ip a dentro de ella y desde tu Arch haz:
-bashssh usuario@IP-de-la-VM
+ssh usuario@IP-de-la-VM
 Si funciona, ya tienes acceso remoto. Eso es exactamente cómo trabajarás en un entorno real.
 
 # INSTALACION RPi OS Lite
