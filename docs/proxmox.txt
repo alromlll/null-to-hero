@@ -1,0 +1,16 @@
+# INSTALACION PROXMOX
+Descarga la ISO de Proxmox VE desde proxmox.com, grábala en un USB con dd o Ventoy, y arranca desde ahí. La instalación es gráfica y sencilla.
+
+# Primera VM: Ubuntu Server 22.04
+Desde la interfaz web de Proxmox (https://IP-proxmox:8006), sube la ISO de Ubuntu Server 22.04 y crea una VM con estos parámetros mínimos: 2 vCPU, 2GB RAM, 20GB disco. Importante: instálalo sin entorno gráfico, solo el sistema base. Acostúmbrate a la terminal desde el primer día.
+
+# Acceso SSH desde Arch a la VM
+Una vez instalada la VM, apunta su IP con ip a dentro de ella y desde tu Arch haz:
+bashssh usuario@IP-de-la-VM
+Si funciona, ya tienes acceso remoto. Eso es exactamente cómo trabajarás en un entorno real.
+
+# INSTALACION RPi OS Lite
+Descarga Raspberry Pi Imager, selecciona Raspberry Pi OS Lite (64-bit), y en la configuración avanzada activa SSH y configura usuario/contraseña antes de grabar la tarjeta. Así arranca con SSH listo sin necesidad de monitor.
+
+# Verificar que todo se ve en red
+Desde terminal, haz ping a la VM Ubuntu y a la RPi. Si los tres se responden entre sí, el entorno está listo.

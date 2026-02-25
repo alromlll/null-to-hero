@@ -1,0 +1,27 @@
+GitHub null-to-hero
+Crea el repo en GitHub (público, es tu portfolio). La estructura inicial puede ser simplemente un README, lo irás completando cada semana. Ese repositorio es tu currículum técnico, trátalo como tal.
+El README de esta semana debe tener: qué hardware tienes, qué IP tiene cada máquina, qué vas a aprender y por qué. No tiene que ser largo, tiene que ser claro.
+
+[[PRIMERA CONFIG]]
+# Crear clave SSH
+ssh-keygen -t ed25519 -C "gitlab" -f ~/.ssh/id_gitlab
+# Copiala en github web
+
+# Verificacion
+ssh -T git@github.com
+# Deberías ver algo como:
+Hi username! You've successfully authenticated, but GitHub does not provide shell access.
+
+[[CREAR REPO]]
+# Desde terminal, en la carpeta del proyecto
+git init
+git add .
+git commit -m "primer commit"
+git branch -M main
+git remote add origin git@github.com:username/name-repo.git
+git push -u origin main
+
+[[WORKFLOW]]
+git add .
+git commit -m "descripcion de los cambios"
+git push

@@ -1,0 +1,143 @@
+1. Añadir un segundo disco virtual a la VM
+# Desde la interfaz web de Proxmox:
+
+- 1. Selecciona tu VM Ubuntu
+- 2. Hardware → Add → Hard Disk
+- 3. Tamaño: 10GB es suficiente
+- 4. Confirma y reinicia la VM
+
+# Verifica que el disco aparece:
+lsblk
+# Deberías ver algo como /dev/sdb (además del disco principal /dev/sda)
+
+
+2. Particionar, formatear y montar
+# Particionar con fdisk
+sudo fdisk /dev/sdb
+
+# Dentro de fdisk:
+# n → nueva partición
+# p → primaria
+# 1 → número de partición
+# Enter, Enter → usar todo el espacio
+# w → escribir cambios y salir
+
+# Verificar que se creó /dev/sdb1
+lsblk
+
+# Formatear con ext4
+sudo mkfs.ext4 /dev/sdb1
+
+# Crear punto de montaje
+sudo mkdir -p /mnt/data
+
+# Montar
+sudo mount /dev/sdb1 /mnt/data
+
+# Verificar
+df -h | grep data
+Crea un archivo de prueba para confirmar que funciona:
+sudo touch /mnt/data/test.txt
+ls /mnt/data
+
+
+3. Montaje automático con /etc/fstab
+El problema es que si reinicias, el disco no se montará solo. Para eso está /etc/fstab:
+# Obtener el UUID del disco (más confiable que /dev/sdb1)
+sudo blkid /dev/sdb1
+# Copia el UUID que aparece
+
+# Editar fstab
+sudo nano /etc/fstab
+
+# Añade al final (reemplaza el UUID con el tuyo):
+UUID=UUID-AQUI  /mnt/data  ext4  defaults  0  2
+# Guardar (Ctrl+O, Enter, Ctrl+X)
+
+# Probar el fstab SIN reiniciar (para no romper nada)
+sudo umount /mnt/data
+sudo mount -a    # monta todo lo que está en fstab
+
+# Si no da error, funcionó
+df -h | grep data
+Reinicia la VM y verifica que /mnt/data sigue montado. Si no te arranca después de editar fstab, has metido algo mal — desde Proxmox puedes acceder por consola y arreglarlo.
+
+
+4. Comandos de almacenamiento esenciales
+# Ver uso de disco por partición
+df -h
+
+# Ver uso de disco por directorio (tamaño total)
+du -sh /var/log
+du -sh /home/*
+
+# Listar todos los discos y particiones
+lsblk
+
+
+# Ver qué está montado y dónde
+mount | grep "^/dev"
+
+# Desmontar (antes de quitar un disco o USB)
+sudo umount /mnt/data
+
+Practica llenando el disco /mnt/data:
+# Crear archivo de 1GB
+sudo dd if=/dev/zero of=/mnt/data/archivo-grande.bin bs=1M count=1024
+
+# Ver cuánto espacio queda
+df -h /mnt/data
+
+
+5. Monitorizar procesos
+top — el clásico
+top
+# Teclas útiles dentro de top:
+# M → ordenar por uso de memoria
+# P → ordenar por uso de CPU
+# k → matar un proceso (pedirá el PID)
+# q → salir
+htop — versión mejorada (instálalo primero)
+sudo apt install htop -y
+htop
+# Es interactivo, usa flechas para navegar, F9 para matar procesos
+ps aux — ver todos los procesos
+ps aux
+ps aux | grep nginx     # filtrar por nombre
+ps aux | head -20       # ver solo los primeros 20
+
+Encontrar qué usa más recursos
+# Proceso que más CPU usa
+ps aux --sort=-%cpu | head -10
+
+# Proceso que más RAM usa
+ps aux --sort=-%mem | head -10
+
+# Ver qué puertos tiene abiertos el sistema
+sudo ss -tulnp
+# t=TCP, u=UDP, l=listening, n=numérico, p=programa
+
+# Ver qué proceso usa el puerto 80
+sudo ss -tulnp | grep :80
+
+
+6. Controlar procesos: kill, nice, renice
+# Crear un proceso en background para practicar
+sleep 300 &
+# Anota el PID que te devuelve
+
+# Ver tus procesos
+ps aux | grep sleep
+
+# Matar con SIGTERM (educado, el proceso puede cerrar limpiamente)
+kill [PID]
+
+# Si no muere, forzar con SIGKILL (mata inmediatamente, no limpia nada)
+kill -9 [PID]
+
+# nice → iniciar proceso con baja prioridad (19 = más bajo)
+nice -n 19 sleep 500 &
+
+# renice → cambiar prioridad de proceso corriendo
+renice 10 -p [PID]
+# En producción SIEMPRE intentas primero kill (SIGTERM) antes de kill -9 (SIGKILL), porque SIGTERM le da al proceso tiempo de cerrar conexiones, guardar datos, etc.

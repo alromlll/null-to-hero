@@ -1,0 +1,103 @@
+# 1. Crear 3 usuarios con diferentes niveles de acceso
+## Usuario normal sin privilegios:
+sudo adduser one
+
+## Usuario que puede usar sudo (admin)
+sudo adduser two
+sudo usermod -aG sudo two
+
+## Usuario de servicio (sin shell, no puede hacer login)
+sudo adduser --system --no-create-home --shell /usr/sbin/nologin three
+
+## Verifica que están creados:
+cat /etc/passwd | grep -E "one|two|three"
+## Intenta hacer login con cada uno y entiende por qué appuser no puede entrar. Eso es exactamente cómo se crean usuarios para servicios en producción.
+
+
+# 2. Permisos: chmod, chown, chgrp
+## Crea un playground para practicar sin romper nada:
+mkdir ~/permisos-lab
+cd ~/permisos-lab
+touch archivo1.txt archivo2.sh secreto.txt
+
+## Practica esto y entiende qué hace cada número:
+chmod 755 archivo2.sh   # rwxr-xr-x → ejecutable por todos, editable solo por dueño
+chmod 644 archivo1.txt  # rw-r--r-- → típico para archivos de config
+chmod 600 secreto.txt   # rw------- → solo el dueño puede leerlo (claves SSH, etc.)
+
+## Cambia el dueño
+sudo chown two archivo1.txt
+sudo chown two:sudo archivo2.sh  # dueño:grupo
+
+## Comprueba con:
+ls -la
+
+## El truco para memorizar el octal: 4=leer, 2=escribir, 1=ejecutar. Los sumas para cada grupo (dueño/grupo/otros). 7=4+2+1=todo, 5=4+1=leer+ejecutar, 4=solo leer.
+
+# 2.1 Permisos Linux en profundidad
+## Además del octal básico, hay tres permisos especiales que debes conocer conceptualmente:
+
+- SUID (4000): un ejecutable corre con los permisos del dueño, no del que lo ejecuta. Ejemplo: /usr/bin/passwd — cualquier usuario puede cambiar su contraseña aunque el archivo de contraseñas sea de root.
+- SGID (2000): similar pero con el grupo. Útil en directorios compartidos.
+- Sticky bit (1000): en un directorio, solo el dueño de un archivo puede borrarlo aunque otros tengan permiso de escritura. Lo verás en /tmp.
+
+ls -la /tmp        # verás la 't' al final de los permisos
+ls -la /usr/bin/passwd  # verás una 's' donde iría la 'x' del dueño
+
+## systemd — cómo arranca Linux
+systemd es el proceso número 1 (PID 1) en casi todas las distros modernas. Gestiona el arranque y todos los servicios. Todo en systemd son units — archivos de configuración que describen un servicio, un punto de montaje, un timer, etc.
+
+##Los servicios están en /lib/systemd/system/ o /etc/systemd/system/. Mira el de nginx:
+cat /lib/systemd/system/nginx.service
+##Verás secciones [Unit], [Service] y [Install] — eso es toda la definición del servicio.
+
+##Man pages — acostúmbrate a usarlas
+bashman chmod
+man systemctl
+man 5 passwd    # el '5' es para la sección de formatos de archivo
+##Busca dentro de una man page con /término y navega con n y N.
+
+# 3. sudo vs su — configurar sudoers
+## Cambiar a otro usuario:
+su - one          # abre sesión como ana
+su - two         # abre sesión como luis
+exit              # vuelve al usuario anterior
+
+## Ejecutar un comando como root sin ser root
+sudo apt update
+sudo -l           # ver qué comandos puedes ejecutar con sudo
+
+## Ahora algo más avanzado — permitir que luis reinicie nginx sin contraseña:
+sudo visudo
+```
+## Añade al final del archivo:
+```
+luis ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nginx
+## Pruébalo cambiando a luis y ejecutando sudo systemctl restart nginx — no debería pedir contraseña. Ese patrón se usa mucho en scripts de automatización.
+
+# 4. Instalar nginx y practicar systemctl
+sudo apt update && sudo apt install nginx -y
+
+## El ciclo de vida de un servicio — memoriza estos:
+sudo systemctl start nginx      # arranca
+sudo systemctl stop nginx       # para
+sudo systemctl restart nginx    # para y arranca
+sudo systemctl reload nginx     # recarga config sin parar (cuando se puede)
+sudo systemctl enable nginx     # que arranque solo al iniciar el sistema
+sudo systemctl disable nginx    # que no arranque solo
+sudo systemctl status nginx     # estado actual + últimas líneas de log
+
+## Verifica que nginx está sirviendo algo:
+curl http://localhost
+## Deberías ver el HTML de la página de bienvenida de nginx.
+
+
+# 5. Ver logs en tiempo real
+## Seguir logs de nginx en vivo (Ctrl+C para salir)
+sudo journalctl -fu nginx
+
+## Abre otra terminal SSH a la VM y haz:
+curl http://localhost
+
+## Verás la petición aparecer en tiempo real en la primera terminal
+## Prueba también a parar nginx y volver a arrancarlo mientras miras el journal. Verás exactamente qué pasa internamente.
