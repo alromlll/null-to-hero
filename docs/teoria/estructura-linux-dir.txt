@@ -1,0 +1,8 @@
+Estructura de directorios Linux — las que necesitas tener claras ahora:
+
+/etc → configuración del sistema y servicios. Aquí vivirás mucho.
+/var → datos variables: logs en /var/log, datos de servicios
+/home → directorios de usuarios
+/tmp → temporal, se borra al reiniciar
+/usr → programas instalados
+/opt → software de terceros instalado manualmente

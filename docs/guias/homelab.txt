@@ -1,0 +1,198 @@
+1. Mapear tu red casera
+Primero necesitas entender cómo está montada tu red actual. Desde tu VM Ubuntu:
+# Ver todas tus interfaces de red y sus IPs
+ip a
+
+# Información más legible
+ip addr show
+
+# Solo las IPs
+ip -4 -br addr
+Anota:
+
+Interfaz: probablemente eth0 o ens18
+IP de la VM: algo como 192.168.1.X
+Máscara: /24 (equivale a 255.255.255.0)
+
+Ahora mira la tabla de rutas:
+# Ver gateway (tu router)
+ip route
+
+# Verás algo como:
+# default via 192.168.1.1 dev eth0
+# Esa 192.168.1.1 es tu gateway
+Ver DNS:
+# Método 1 (Ubuntu/Debian modernos)
+resolvectl status
+
+# Método 2 (clásico)
+cat /etc/resolv.conf
+
+# Verás algo como:
+# nameserver 192.168.1.1  (tu router)
+# o nameserver 8.8.8.8    (si ya configuraste DNS público)
+Crea un documento de texto con esta info:
+nano ~/network-map.txt
+```
+
+Escribe algo así:
+```
+=== MAPA DE RED HOMELAB ===
+
+Router/Gateway: 192.168.1.1
+Rango de red: 192.168.1.0/24 (254 hosts disponibles)
+DNS actual: 192.168.1.1 (router) y 8.8.8.8 (Google)
+
+Dispositivos:
+- Proxmox host: 192.168.1.X
+- VM Ubuntu: 192.168.1.Y
+- Raspberry Pi: 192.168.1.Z
+- PC Arch: 192.168.1.W
+
+Máscara de subred: 255.255.255.0 (/24)
+Broadcast: 192.168.1.255
+
+2. Configurar IP estática en Ubuntu VM
+Hasta ahora tu VM probablemente tiene IP dinámica (DHCP). En servidores SIEMPRE usas IP estática.
+Ubuntu Server usa netplan para configurar la red:
+# Ver configuración actual
+ls /etc/netplan/
+cat /etc/netplan/*.yaml
+Edita el archivo (el nombre puede variar, algo como 00-installer-config.yaml):
+sudo nano /etc/netplan/00-installer-config.yaml
+Reemplaza el contenido con esto (ajusta los valores a tu red):
+yamlnetwork:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens18:  # Tu interfaz, verifica con 'ip a'
+      dhcp4: no
+      addresses:
+        - 192.168.1.100/24  # IP que quieres (elige una libre)
+      routes:
+        - to: default
+          via: 192.168.1.1  # Tu gateway/router
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+IMPORTANTE:
+
+YAML es sensible a indentación (usa espacios, NO tabs)
+Cambia ens18 por tu interfaz real
+Elige una IP que NO esté en el rango DHCP de tu router
+
+Aplica los cambios:
+# Primero prueba que la sintaxis es correcta
+sudo netplan try
+
+# Si todo OK, te dice "Configuration accepted"
+# Presiona Enter
+
+# Aplicar definitivamente
+sudo netplan apply
+
+# Verificar nueva IP
+ip a
+Si pierdes la conexión SSH, conéctate desde la consola de Proxmox y revisa el archivo netplan.
+Prueba que sigue funcionando:
+ping 8.8.8.8       # internet
+ping 192.168.1.1   # gateway
+ping google.com    # DNS funciona
+
+3. Configurar IP estática en Raspberry Pi
+Conéctate a la RPi por SSH y edita:
+sudo nano /etc/dhcpcd.conf
+```
+
+Añade al final (ajusta a tu red):
+```
+interface eth0
+static ip_address=192.168.1.101/24
+static routers=192.168.1.1
+static domain_name_servers=8.8.8.8 8.8.4.4
+Si usas WiFi en vez de ethernet, cambia eth0 por wlan0.
+Reinicia networking:
+sudo systemctl restart dhcpcd
+Verifica:
+ip a
+ping 8.8.8.8
+Actualiza tu network-map.txt con las IPs estáticas que configuraste.
+
+4. Diagnóstico de red — comandos esenciales
+ping — ¿hay conectividad?
+# Ping básico (Ctrl+C para parar)
+ping 8.8.8.8
+
+# Solo 4 paquetes
+ping -c 4 google.com
+
+# Ver cuánto tarda
+ping -c 1 google.com
+# Mira el tiempo en la línea "time=XX ms"
+traceroute — ¿por dónde pasa el tráfico?
+# Instalar si no está
+sudo apt install traceroute -y
+
+# Ver ruta hasta google.com
+traceroute google.com
+
+# Verás cada salto (hop) hasta el destino
+# Salto 1 suele ser tu router, luego tu ISP, luego internet
+nslookup / dig — ¿funciona el DNS?
+# nslookup (simple)
+nslookup google.com
+
+# dig (más info)
+dig google.com
+
+# Ver solo la IP
+dig +short google.com
+
+# Usar un DNS específico
+dig @8.8.8.8 google.com
+ss — ¿qué puertos están abiertos?
+# Ver todos los puertos TCP escuchando
+sudo ss -tlnp
+
+# t = TCP
+# l = listening (escuchando)
+# n = numérico (no resolver nombres)
+# p = proceso
+
+# Ver puertos UDP también
+sudo ss -tulnp
+
+# Ver conexiones establecidas
+sudo ss -tunp | grep ESTAB
+curl — hacer peticiones HTTP
+# Petición básica
+curl http://google.com
+
+# Ver headers
+curl -I http://google.com
+
+# Guardar respuesta en archivo
+curl http://ejemplo.com/archivo.txt -o descarga.txt
+
+# Seguir redirecciones
+curl -L http://google.com
+
+5. nmap — escanear tu red
+MUY IMPORTANTE: Solo escanea TU red local. Escanear redes ajenas es ilegal.
+# Instalar
+sudo apt install nmap -y
+
+# Escanear tu red local (tarda unos segundos)
+sudo nmap -sn 192.168.1.0/24
+
+# Verás todos los dispositivos activos en tu red
+# -sn = ping scan (no escanea puertos)
+
+# Escanear puertos de un host específico
+sudo nmap 192.168.1.100
+
+# Escaneo más agresivo (tarda más)
+sudo nmap -A 192.168.1.100
+# -A = OS detection, version, script scanning
+```

@@ -1,0 +1,19 @@
+Permisos Linux en profundidad
+Además del octal básico, hay tres permisos especiales que debes conocer conceptualmente:
+
+SUID (4000): un ejecutable corre con los permisos del dueño, no del que lo ejecuta. Ejemplo: /usr/bin/passwd — cualquier usuario puede cambiar su contraseña aunque el archivo de contraseñas sea de root.
+SGID (2000): similar pero con el grupo. Útil en directorios compartidos.
+Sticky bit (1000): en un directorio, solo el dueño de un archivo puede borrarlo aunque otros tengan permiso de escritura. Lo verás en /tmp.
+
+ls -la /tmp        # verás la 't' al final de los permisos
+ls -la /usr/bin/passwd  # verás una 's' donde iría la 'x' del dueño
+systemd — cómo arranca Linux
+systemd es el proceso número 1 (PID 1) en casi todas las distros modernas. Gestiona el arranque y todos los servicios. Todo en systemd son units — archivos de configuración que describen un servicio, un punto de montaje, un timer, etc.
+Los servicios están en /lib/systemd/system/ o /etc/systemd/system/. Mira el de nginx:
+cat /lib/systemd/system/nginx.service
+Verás secciones [Unit], [Service] y [Install] — eso es toda la definición del servicio.
+Man pages — acostúmbrate a usarlas
+man chmod
+man systemctl
+man 5 passwd    # el '5' es para la sección de formatos de archivo
+Busca dentro de una man page con /término y navega con n y N.

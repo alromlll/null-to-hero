@@ -1,0 +1,162 @@
+[[VARIABLES BASH]]
+# Declarar variable (sin espacios alrededor del =)
+NOMBRE="Juan"
+EDAD=25
+
+# Usar variable (con $)
+echo "Hola, $NOMBRE"
+echo "Tienes $EDAD años"
+
+# Variables de entorno (mayúsculas por convención)
+export PATH="/nuevo/directorio:$PATH"
+
+# Variables especiales
+$0  # nombre del script
+$1  # primer argumento
+$#  # número de argumentos
+$?  # exit code del último comando (0 = éxito, otro = error)
+$$  # PID del script actual
+
+[[CONDICIONALES]]
+# if básico
+if [ "$EDAD" -gt 18 ]; then
+    echo "Mayor de edad"
+else
+    echo "Menor de edad"
+fi
+
+# if con elif
+if [ "$EDAD" -lt 18 ]; then
+    echo "Menor"
+elif [ "$EDAD" -lt 65 ]; then
+    echo "Adulto"
+else
+    echo "Senior"
+fi
+
+# Operadores de comparación numérica:
+# -eq  igual
+# -ne  no igual
+# -gt  mayor que
+# -ge  mayor o igual
+# -lt  menor que
+# -le  menor o igual
+
+# Operadores de strings:
+# =    igual
+# !=   no igual
+# -z   string vacío
+# -n   string no vacío
+
+# Operadores de archivos:
+# -f   es un archivo
+# -d   es un directorio
+# -e   existe
+# -r   es legible
+# -w   es escribible
+# -x   es ejecutable
+
+# Ejemplo:
+if [ -f "/etc/nginx/nginx.conf" ]; then
+    echo "Nginx configurado"
+fi
+IMPORTANTE: [ ] vs [[ ]]
+
+[ ] → comando test clásico, compatible con sh
+[[ ]] → palabra clave de bash, más potente, permite regex y && || dentro
+
+Para scripts de bash moderno usa [[ ]]:
+if [[ "$SERVICE" == "nginx" && -f "/etc/nginx/nginx.conf" ]]; then
+    echo "Todo OK"
+fi
+
+[[BUCLES]]
+# for clásico
+for i in 1 2 3 4 5; do
+    echo "Número $i"
+done
+
+# for con rango
+for i in {1..10}; do
+    echo "Iteración $i"
+done
+
+# for sobre archivos
+for archivo in /var/log/*.log; do
+    echo "Procesando: $archivo"
+done
+
+# while
+contador=0
+while [ $contador -lt 5 ]; do
+    echo "Contador: $contador"
+    contador=$((contador + 1))
+done
+
+# while leyendo un archivo línea por línea
+while read linea; do
+    echo "Línea: $linea"
+done < /etc/passwd
+
+[[EXIT CODES]]
+Todo comando devuelve un código de salida:
+
+0 = éxito
+1-255 = error (cada número puede significar un error diferente)
+
+# Ver el exit code del último comando
+ls /existe
+echo $?    # 0 si existe, 2 si no existe
+
+ls /noexiste
+echo $?    # 2
+
+# Usar en scripts
+if ping -c 1 8.8.8.8 &> /dev/null; then
+    echo "Hay internet"
+    exit 0
+else
+    echo "Sin internet"
+    exit 1
+fi
+
+grep, awk, sed — los tres mosqueteros
+grep → buscar texto
+# Buscar en archivo
+grep "error" /var/log/syslog
+
+# Buscar recursivamente en directorio
+grep -r "nginx" /etc/
+
+# Ignorar mayúsculas
+grep -i "ERROR" archivo.log
+
+# Invertir búsqueda (mostrar lo que NO coincide)
+grep -v "debug" archivo.log
+
+# Mostrar líneas antes/después del match
+grep -A 2 "error" archivo.log    # 2 líneas después
+grep -B 2 "error" archivo.log    # 2 líneas antes
+grep -C 2 "error" archivo.log    # 2 líneas contexto (antes y después)
+awk → procesar columnas
+# Imprimir columna 1 y 3
+ps aux | awk '{print $1, $3}'
+
+# Solo si columna 3 > 50 (procesos que usan >50% CPU)
+ps aux | awk '$3 > 50 {print $0}'
+
+# Sumar columna 3 (uso total de CPU)
+ps aux | awk '{sum += $3} END {print sum}'
+sed → buscar y reemplazar
+# Reemplazar primera ocurrencia en cada línea
+sed 's/viejo/nuevo/' archivo.txt
+
+# Reemplazar todas las ocurrencias
+sed 's/viejo/nuevo/g' archivo.txt
+
+# Reemplazar en el archivo (in-place)
+sed -i 's/viejo/nuevo/g' archivo.txt
+
+# Borrar líneas que contengan "debug"
+sed '/debug/d' archivo.log
+

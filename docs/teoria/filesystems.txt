@@ -1,0 +1,52 @@
+Filesystems — qué son y cuándo usarlos
+
+ext4: el estándar en Linux, estable, rápido, compatibilidad universal
+xfs: mejor para archivos muy grandes, usado en servidores de archivos
+btrfs: snapshots nativos, compresión, más moderno pero menos maduro
+
+Por ahora trabaja con ext4. Si te preguntan en entrevista, di que ext4 es el más usado y confiable.
+
+Procesos, PIDs y señales
+
+PID: Process ID, el número único de cada proceso
+PPID: Parent PID, el proceso que lo creó
+Daemons: procesos que corren en background sin terminal
+
+Señales más importantes:
+
+SIGTERM (15): "Por favor cierra limpiamente" — es la que envía kill sin opciones
+SIGKILL (9): "Muere ya" — kill -9 — no se puede ignorar ni interceptar
+SIGHUP (1): "Recarga tu configuración" — kill -HUP o systemctl reload
+
+
+stdin, stdout, stderr — redirección
+Todo programa tiene tres canales:
+
+stdin (0): entrada estándar (teclado)
+stdout (1): salida estándar (pantalla)
+stderr (2): errores (pantalla)
+
+bash# Redirigir salida a archivo (stdout)
+ls -la > listado.txt
+
+# Añadir sin sobrescribir
+ls -la >> listado.txt
+
+# Redirigir errores (stderr)
+ls /noexiste 2> errores.txt
+
+# Redirigir todo (stdout + stderr)
+comando > todo.txt 2>&1
+
+# Pipe → pasar salida de un comando a otro
+ps aux | grep nginx | wc -l    # contar líneas
+
+LVM — Logical Volume Manager
+No necesitas montarlo ahora, pero entiende el concepto porque muchos servidores lo usan:
+
+PV (Physical Volume): disco físico
+VG (Volume Group): grupo de discos
+LV (Logical Volume): "partición virtual" dentro del VG
+
+Ventaja: puedes redimensionar particiones en caliente, añadir discos sin parar servicios, hacer snapshots. En homelab con Proxmox no lo necesitas mucho, pero en producción es estándar.
+

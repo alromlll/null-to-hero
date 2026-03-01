@@ -68,7 +68,7 @@ Internet
 | Git / GitHub    | ✅ Activo    |
 | Firewall (ufw)  | ⬜ Pendiente |
 | DNS / DHCP      | ⬜ Pendiente |
-| Monitorización  | ⬜ Pendiente |
+| Monitorización  | ✅️ Pendiente |
 
 > Se irá actualizando semana a semana conforme se completen los módulos.
 
@@ -96,9 +96,9 @@ homelab-journal/
 | 1 — Preparación | ✅ Completado | README + Proxmox con VM corriendo |
 | 2 — Permisos y servicios | ✅️ Completado | Guía de permisos en GitHub |
 | 3 — Almacenamiento | ✅️ Completado | Disco montado + lsblk/df -h |
-| 4 — Bash scripting | 🔄 | En curso | 3 scripts + crontab |
-| 5 — Redes básicas | ⬜ | Diagrama de red + IPs estáticas |
-| 6 — Servicios de red | ⬜ | DNS propio + firewall |
+| 4 — Bash scripting | ✅️ | En curso | 3 scripts + crontab |
+| 5 — Redes básicas | ✅️ | Diagrama de red + IPs estáticas |
+| 6 — Servicios de red | 🔄 | DNS propio + firewall |
 | 7 — SSH profesional | ⬜ | SSH por clave + fail2ban |
 | 8 — Nginx + reverse proxy | ⬜ | Web servida + Pi-hole |
 | 9 — Docker | ⬜ | WordPress + MySQL en Docker |

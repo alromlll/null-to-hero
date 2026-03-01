@@ -1,0 +1,120 @@
+**Modelo TCP/IP (4 capas)**
+
+Olvídate de OSI de momento. TCP/IP es lo que realmente importa:
+
+1. **Capa de Acceso a Red** (física + enlace)
+   - Ethernet, WiFi, cables, switches
+   - Direcciones MAC
+   - Tramas (frames)
+
+2. **Capa de Internet**
+   - IP (direcciones, routing)
+   - ICMP (ping, traceroute)
+   - Paquetes (packets)
+
+3. **Capa de Transporte**
+   - TCP (orientado a conexión, fiable)
+   - UDP (sin conexión, rápido)
+   - Puertos
+
+4. **Capa de Aplicación**
+   - HTTP, HTTPS, SSH, DNS, FTP, SMTP
+   - Todo lo que usa el usuario final
+
+Ejemplo de cómo funciona una web:
+1. Escribes `google.com` en el navegador
+2. **DNS** (capa aplicación) convierte `google.com` → `142.250.X.X`
+3. **TCP** (capa transporte) abre conexión al puerto 443
+4. **IP** (capa internet) enruta paquetes desde tu IP hasta la IP de Google
+5. **Ethernet** (capa acceso) mueve las tramas por cable/wifi hasta tu router
+
+---
+
+**IP, máscara de subred, gateway, DNS**
+
+**IP**: dirección única de tu dispositivo en la red
+- IPv4: `192.168.1.100` (4 octetos de 0-255)
+- IPv6: `2001:0db8:85a3::8a2e:0370:7334` (existe pero no lo tocarás por ahora)
+
+**Máscara de subred**: define qué parte de la IP es red y qué parte es host
+- `/24` o `255.255.255.0` → primeros 3 octetos son red, el último es host
+  - Red: `192.168.1.0`
+  - Hosts válidos: `192.168.1.1` a `192.168.1.254` (254 hosts)
+  - Broadcast: `192.168.1.255`
+
+**Gateway**: puerta de salida de tu red (normalmente tu router)
+- Si quieres hablar con algo fuera de tu red (ej: Google), mandas el paquete al gateway
+- El gateway lo reenvía a internet
+
+**DNS**: traduce nombres a IPs
+- Sin DNS tendrías que recordar `142.250.185.46` en vez de `google.com`
+- Servidores DNS públicos: 8.8.8.8 (Google), 1.1.1.1 (Cloudflare)
+
+---
+
+**DHCP — cómo funciona**
+
+Proceso **DORA**:
+
+1. **Discover**: Tu dispositivo grita "¿hay algún servidor DHCP aquí?"
+2. **Offer**: El servidor DHCP responde "toma, usa esta IP: 192.168.1.50"
+3. **Request**: Tu dispositivo dice "OK, voy a usar esa"
+4. **Acknowledge**: El servidor confirma "perfecto, es tuya por X horas"
+
+Por eso cuando conectas un dispositivo nuevo a WiFi, automáticamente tiene IP — DHCP.
+
+---
+
+**DNS — resolución de nombres**
+```
+Usuario: "Quiero ir a google.com"
+    ↓
+PC pregunta al DNS local (router): "¿IP de google.com?"
+    ↓
+Router pregunta a DNS del ISP: "¿IP de google.com?"
+    ↓
+DNS del ISP pregunta al DNS raíz: "¿quién sabe de .com?"
+    ↓
+DNS raíz: "pregunta a estos servidores de .com"
+    ↓
+DNS de .com: "pregunta a los DNS de google.com"
+    ↓
+DNS de Google responde: "142.250.185.46"
+    ↓
+Tu PC recibe la IP y se conecta
+```
+
+Tipos de registros DNS importantes:
+- **A**: nombre → IPv4 (`google.com → 142.250.185.46`)
+- **AAAA**: nombre → IPv6
+- **CNAME**: alias (`www.ejemplo.com → ejemplo.com`)
+- **MX**: servidor de correo
+- **NS**: servidores DNS autoritativos del dominio
+
+---
+
+**Puertos comunes** — memoriza estos
+
+| Puerto | Protocolo | Uso |
+|--------|-----------|-----|
+| 22 | SSH | Acceso remoto seguro |
+| 80 | HTTP | Web sin cifrar |
+| 443 | HTTPS | Web cifrada (SSL/TLS) |
+| 53 | DNS | Resolución de nombres |
+| 25 | SMTP | Envío de email |
+| 3306 | MySQL | Base de datos MySQL |
+| 5432 | PostgreSQL | Base de datos PostgreSQL |
+| 3389 | RDP | Escritorio remoto Windows |
+
+---
+
+**APIPA — 169.254.x.x**
+
+Si ves una IP que empieza por `169.254`, significa:
+- Tu dispositivo pidió IP por DHCP
+- No hubo respuesta del servidor DHCP
+- Asignó una IP "de emergencia" en el rango 169.254.0.0/16
+
+Es la forma de Windows/Linux de decir "tengo conexión física pero no conseguí IP de red". Solución: arreglar el DHCP o configurar IP estática.
+
+
